@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sign in – Campusly</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Figtree:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="login">
+      <aside>
+        <a class="logo" href="index.html"><i>C</i>Campusly</a>
+        <div>
+          <h2 id="sideTitle">Welcome back to campus.</h2>
+          <p id="sideText">
+            Check attendance, fees, notices and results from one dashboard.
+          </p>
+        </div>
+        <small>© Campusly demo</small>
+      </aside>
+
+      <main>
+        <!-- ===== SIGN IN FORM ===== -->
+        <form id="loginForm" novalidate>
+          <h1>Sign in</h1>
+          <div style="color: var(--mute)">
+            Choose your role and enter your details.
+          </div>
+
+          <div class="tabs">
+            <button type="button" class="on" data-role="Admin">Admin</button>
+            <button type="button" data-role="Teacher">Teacher</button>
+            <button type="button" data-role="Student">Student</button>
+          </div>
+
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            autocomplete="username"
+            placeholder="you@college.edu"
+          />
+
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Enter password"
+          />
+
+          <p class="err" id="error" role="alert"></p>
+          <button class="btn" style="width: 100%; margin-top: 0.4rem">
+            Sign in
+          </button>
+
+          <p class="hint">
+            Demo login: <b>admin@college.edu</b> / <b>admin123</b>
+          </p>
+          <p class="hint">
+            New here? <a href="#" id="showRegister">Create an account</a>
+          </p>
+          <p class="hint"><a href="index.html">← Back to home</a></p>
+        </form>
+
+        <!-- ===== REGISTER FORM ===== -->
+        <form id="registerForm" class="hidden" novalidate>
+          <h1>Create account</h1>
+          <div style="color: var(--mute)">It takes less than a minute.</div>
+
+          <label for="rName">Full name</label>
+          <input id="rName" autocomplete="name" placeholder="Your full name" />
+
+          <label for="rEmail">Email</label>
+          <input
+            id="rEmail"
+            type="email"
+            autocomplete="email"
+            placeholder="you@college.edu"
+          />
+
+          <label for="rRole">I am a</label>
+          <select id="rRole">
+            <option>Student</option>
+            <option>Teacher</option>
+            <option>Admin</option>
+          </select>
+
+          <label for="rPass">Password</label>
+          <input
+            id="rPass"
+            type="password"
+            autocomplete="new-password"
+            placeholder="At least 6 characters"
+          />
+
+          <label for="rPass2">Confirm password</label>
+          <input
+            id="rPass2"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Type the password again"
+          />
+
+          <p class="err" id="rError" role="alert"></p>
+          <p class="ok" id="rOk" role="status"></p>
+          <button class="btn" style="width: 100%; margin-top: 0.4rem">
+            Create account
+          </button>
+
+          <p class="hint">
+            Already have an account? <a href="#" id="showLogin">Sign in</a>
+          </p>
+          <p class="hint"><a href="index.html">← Back to home</a></p>
+        </form>
+      </main>
+    </div>
+
+    <script>
+      let role = "Admin";
+      const $ = (id) => document.getElementById(id);
+
+      /* ---------- Saved accounts (stored in the browser) ---------- */
+      function getUsers() {
+        try {
+          return JSON.parse(localStorage.getItem("cmsUsers")) || [];
+        } catch (e) {
+          return [];
+        }
+      }
+      function saveUsers(list) {
+        localStorage.setItem("cmsUsers", JSON.stringify(list));
+      }
+
+      /* ---------- Switch between Sign in and Register ---------- */
+      function showForm(which) {
+        const reg = which === "register";
+        $("loginForm").classList.toggle("hidden", reg);
+        $("registerForm").classList.toggle("hidden", !reg);
+        $("sideTitle").textContent = reg
+          ? "Join your campus online."
+          : "Welcome back to campus.";
+        $("sideText").textContent = reg
+          ? "Create your account to see attendance, fees, notices and results."
+          : "Check attendance, fees, notices and results from one dashboard.";
+        $("error").textContent = "";
+        $("rError").textContent = "";
+        $("rOk").textContent = "";
+      }
+      $("showRegister").onclick = (e) => {
+        e.preventDefault();
+        showForm("register");
+      };
+      $("showLogin").onclick = (e) => {
+        e.preventDefault();
+        showForm("login");
+      };
+
+      /* ---------- Role tabs on the sign-in form ---------- */
+      document.querySelectorAll(".tabs button").forEach((btn) => {
+        btn.onclick = () => {
+          document
+            .querySelectorAll(".tabs button")
+            .forEach((b) => b.classList.remove("on"));
+          btn.classList.add("on");
+          role = btn.dataset.role;
+        };
+      });
+
+      /* ---------- Register ---------- */
+      $("registerForm").onsubmit = async function (e) {
+        e.preventDefault();
+        const name = $("rName").value.trim();
+        const email = $("rEmail").value.trim().toLowerCase();
+        const pass = $("rPass").value;
+        const pass2 = $("rPass2").value;
+        const userRole = $("rRole").value;
+        const err = $("rError");
+        $("rOk").textContent = "";
+
+        if (!name || !email || !pass || !pass2) {
+          err.textContent = "Fill in all the fields.";
+          return;
+        }
+        if (!/^\S+@\S+\.\S+$/.test(email)) {
+          err.textContent = "Enter a valid email address, like you@college.edu.";
+          return;
+        }
+        if (pass.length < 6) {
+          err.textContent = "Use a password with at least 6 characters.";
+          return;
+        }
+        if (pass !== pass2) {
+          err.textContent = "The two passwords do not match.";
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password: pass, role: userRole })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            err.textContent = data.error || 'Failed to register.';
+            return;
+          }
+
+          err.textContent = "";
+          $("rOk").textContent = "Account created. Taking you to sign in...";
+
+          setTimeout(() => {
+            $("registerForm").reset();
+            showForm("login");
+            $("email").value = email;
+            $("password").focus();
+          }, 1200);
+        } catch (error) {
+          err.textContent = "Server error. Please ensure the backend is running.";
+        }
+      };
+
+      /* ---------- Sign in ---------- */
+      $("loginForm").onsubmit = async function (e) {
+        e.preventDefault();
+        const email = $("email").value.trim().toLowerCase();
+        const pass = $("password").value;
+        const error = $("error");
+
+        if (!email || !pass) {
+          error.textContent = "Enter both your email and password.";
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: pass, selectedRole: role })
+          });
+          const data = await res.json();
+
+          if (!res.ok) {
+            error.textContent = data.error || 'Email or password is incorrect.';
+            return;
+          }
+
+          sessionStorage.setItem("cmsToken", data.token);
+          sessionStorage.setItem("cmsRole", data.user.role);
+          sessionStorage.setItem("cmsName", data.user.name);
+          window.location.href = "dashboard.html";
+        } catch (err) {
+          error.textContent = "Unable to connect to backend server.";
+        }
+      };
+    </script>
+  </body>
+</html>

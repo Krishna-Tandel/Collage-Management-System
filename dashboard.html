@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard – Campusly</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Figtree:wght@400;500;600&display=swap"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <nav class="side" aria-label="Main">
+        <a class="logo" href="index.html"><i>C</i>Campusly</a>
+        <a href="dashboard.html" class="nav on">🏠 Overview</a>
+        <a href="#students-section" class="nav">🎓 Students</a>
+        <a href="#" class="nav">✅ Attendance</a>
+        <a href="#" class="nav">🗓️ Timetable</a>
+        <a href="#" class="nav">💳 Fees</a>
+        <a href="#" class="nav">📊 Results</a>
+        <a href="login.html" class="nav out" id="logout">↩ Sign out</a>
+      </nav>
+
+      <div class="main">
+        <div class="bar">
+          <div>
+            <h1 id="greeting">Good morning</h1>
+            <p>Here is what is happening on campus today.</p>
+          </div>
+          <div class="who">
+            <button class="btn ghost" id="themeBtn" type="button">
+              Toggle theme
+            </button>
+            <div class="av" id="avatar">A</div>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <span>Total students</span><strong id="statTotalStudents">5,214</strong>
+            <small>Live system count</small>
+          </div>
+          <div class="stat">
+            <span>Faculty</span><strong id="statFaculty">320</strong>
+            <small>Active members</small>
+          </div>
+          <div class="stat">
+            <span>Attendance today</span><strong id="statAvgAttendance">91%</strong>
+            <small>Across departments</small>
+          </div>
+          <div class="stat">
+            <span>Fees collected</span><strong id="statFees">₹48.2L</strong>
+            <small>Total receipts</small>
+          </div>
+        </div>
+
+        <div class="cols">
+          <div class="panel">
+            <h3>Attendance by department</h3>
+            <div class="chart" id="chart"></div>
+            <div class="labels" id="chartLabels"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Notices</h3>
+              <button class="btn-sm" id="btnAddNotice">+ Add Notice</button>
+            </div>
+            <div id="noticesContainer"></div>
+          </div>
+        </div>
+
+        <div class="panel" id="students-section">
+          <div class="panel-header">
+            <h3>Students</h3>
+            <button class="btn-sm" id="btnAddStudent">+ Add Student</button>
+          </div>
+          <div class="tools">
+            <input
+              id="search"
+              placeholder="Search by name or roll no."
+              aria-label="Search students"
+            />
+            <select id="dept" aria-label="Filter by department">
+              <option value="">All departments</option>
+              <option>BCA</option>
+              <option>B.Com</option>
+              <option>B.Sc</option>
+              <option>BA</option>
+              <option>BBA</option>
+            </select>
+          </div>
+          <div class="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Roll no.</th>
+                  <th>Name</th>
+                  <th>Course</th>
+                  <th>Attendance</th>
+                  <th>Fees</th>
+                  <th id="actionsHeader">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+          <p class="hint" id="empty"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: ADD / EDIT STUDENT ===== -->
+    <div class="modal-overlay hidden" id="studentModal">
+      <div class="modal-card">
+        <h3 id="modalTitle">Add New Student</h3>
+        <form id="studentForm">
+          <input type="hidden" id="mStudentId" />
+          <label for="mRoll">Roll Number</label>
+          <input id="mRoll" placeholder="e.g. BCA145" required />
+
+          <label for="mName">Full Name</label>
+          <input id="mName" placeholder="e.g. Ananya Roy" required />
+
+          <label for="mCourse">Course / Department</label>
+          <select id="mCourse">
+            <option>BCA</option>
+            <option>B.Com</option>
+            <option>B.Sc</option>
+            <option>BA</option>
+            <option>BBA</option>
+          </select>
+
+          <label for="mAttendance">Attendance (%)</label>
+          <input id="mAttendance" type="number" min="0" max="100" value="90" required />
+
+          <label for="mFeeStatus">Fee Status</label>
+          <select id="mFeeStatus">
+            <option value="Paid">Paid</option>
+            <option value="Due">Due</option>
+          </select>
+
+          <div class="modal-actions">
+            <button type="button" class="btn-sm ghost" id="closeStudentModal">Cancel</button>
+            <button type="submit" class="btn-sm">Save Student</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ===== MODAL: ADD NOTICE ===== -->
+    <div class="modal-overlay hidden" id="noticeModal">
+      <div class="modal-card">
+        <h3>Post New Notice</h3>
+        <form id="noticeForm">
+          <label for="nTitle">Notice Title / Details</label>
+          <input id="nTitle" placeholder="e.g. Mid-term examination schedule announced" required />
+
+          <label for="nAuthor">Posted By</label>
+          <input id="nAuthor" placeholder="e.g. Exam Cell or Prof. Mehta" />
+
+          <div class="modal-actions">
+            <button type="button" class="btn-sm ghost" id="closeNoticeModal">Cancel</button>
+            <button type="submit" class="btn-sm">Post Notice</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // 1. Authentication check
+      const role = sessionStorage.getItem("cmsRole");
+      const userName = sessionStorage.getItem("cmsName") || role;
+      const token = sessionStorage.getItem("cmsToken");
+      if (!role) window.location.href = "login.html";
+
+      const authHeaders = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      };
+
+      // 2. Greeting and avatar
+      const hour = new Date().getHours();
+      const part = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+      document.getElementById("greeting").textContent = part + ", " + (userName ? userName.split(" ")[0] : "");
+      document.getElementById("avatar").textContent = userName ? userName[0].toUpperCase() : "A";
+      document.getElementById("avatar").title = userName + " (" + role + ")";
+
+      // 3. Sign out
+      document.getElementById("logout").onclick = () => {
+        sessionStorage.removeItem("cmsRole");
+        sessionStorage.removeItem("cmsName");
+        sessionStorage.removeItem("cmsToken");
+      };
+
+      // 4. Theme toggle
+      document.getElementById("themeBtn").onclick = () => {
+        const root = document.documentElement;
+        const isDark = getComputedStyle(root).getPropertyValue("--bg").trim() === "#0c0a14";
+        root.dataset.theme = isDark ? "light" : "dark";
+      };
+
+      // 5. Hide write actions if role is Student
+      if (role === 'Student') {
+        document.getElementById('btnAddStudent').style.display = 'none';
+        document.getElementById('btnAddNotice').style.display = 'none';
+      }
+
+      // 6. Fetch Dashboard Stats
+      async function loadStats() {
+        try {
+          const res = await fetch('/api/dashboard/stats', { headers: authHeaders });
+          if (!res.ok) return;
+          const data = await res.json();
+          document.getElementById('statTotalStudents').textContent = data.totalStudents.toLocaleString();
+          document.getElementById('statFaculty').textContent = data.facultyCount;
+          document.getElementById('statAvgAttendance').textContent = data.avgAttendance + '%';
+          document.getElementById('statFees').textContent = data.feesCollected;
+        } catch (e) {
+          console.error("Stats load error:", e);
+        }
+      }
+
+      // 7. Fetch Department Attendance Chart
+      async function loadDepartments() {
+        try {
+          const res = await fetch('/api/dashboard/departments', { headers: authHeaders });
+          if (!res.ok) return;
+          const depts = await res.json();
+          document.getElementById("chart").innerHTML = depts
+            .map(d => `<div class="${d.attendance_pct < 80 ? 'low' : ''}" style="height:${d.attendance_pct * 1.6}px"><b>${d.attendance_pct}%</b></div>`)
+            .join("");
+          document.getElementById("chartLabels").innerHTML = depts
+            .map(d => `<span>${d.name}</span>`)
+            .join("");
+        } catch (e) {
+          console.error("Dept load error:", e);
+        }
+      }
+
+      // 8. Fetch Notices
+      async function loadNotices() {
+        try {
+          const res = await fetch('/api/notices', { headers: authHeaders });
+          if (!res.ok) return;
+          const notices = await res.json();
+          const container = document.getElementById('noticesContainer');
+          if (!notices.length) {
+            container.innerHTML = `<p class="hint">No notices posted yet.</p>`;
+            return;
+          }
+          container.innerHTML = notices.map(n => `
+            <div class="note">
+              ${escapeHtml(n.title)}
+              <small>${escapeHtml(n.author)} ${role === 'Admin' ? `· <a href="#" onclick="deleteNotice(${n.id}); return false;" style="color:var(--bad)">Delete</a>` : ''}</small>
+            </div>
+          `).join('');
+        } catch (e) {
+          console.error("Notices load error:", e);
+        }
+      }
+
+      window.deleteNotice = async function(id) {
+        if (!confirm('Are you sure you want to delete this notice?')) return;
+        try {
+          const res = await fetch('/api/notices/' + id, { method: 'DELETE', headers: authHeaders });
+          if (res.ok) loadNotices();
+        } catch (e) {
+          alert("Failed to delete notice");
+        }
+      };
+
+      // 9. Fetch and Render Students
+      let allStudents = [];
+      async function showStudents() {
+        const text = document.getElementById("search").value.toLowerCase();
+        const dept = document.getElementById("dept").value;
+        try {
+          const query = new URLSearchParams();
+          if (text) query.append('search', text);
+          if (dept) query.append('dept', dept);
+
+          const res = await fetch('/api/students?' + query.toString(), { headers: authHeaders });
+          if (!res.ok) return;
+          allStudents = await res.json();
+
+          const tbody = document.getElementById("tbody");
+          if (!allStudents.length) {
+            tbody.innerHTML = '';
+            document.getElementById("empty").textContent = "No students match. Clear the search or choose another department.";
+            return;
+          }
+
+          document.getElementById("empty").textContent = "";
+          tbody.innerHTML = allStudents.map(s => `
+            <tr>
+              <td><b>${escapeHtml(s.roll_no)}</b></td>
+              <td>${escapeHtml(s.name)}</td>
+              <td>${escapeHtml(s.course)}</td>
+              <td>${s.attendance}%</td>
+              <td><span class="pill" style="--c:${s.fee_status === 'Paid' ? 'var(--ok)' : 'var(--bad)'}">${s.fee_status}</span></td>
+              <td>
+                ${role !== 'Student' ? `
+                  <button class="btn-sm ghost" onclick="toggleFee(${s.id}, '${s.fee_status}')">Toggle Fee</button>
+                  ${role === 'Admin' ? `<button class="btn-sm danger" onclick="deleteStudent(${s.id})">Delete</button>` : ''}
+                ` : '-'}
+              </td>
+            </tr>
+          `).join('');
+        } catch (e) {
+          console.error("Student fetch error:", e);
+        }
+      }
+
+      window.toggleFee = async function(id, currentStatus) {
+        const newStatus = currentStatus === 'Paid' ? 'Due' : 'Paid';
+        try {
+          const res = await fetch('/api/students/' + id, {
+            method: 'PUT',
+            headers: authHeaders,
+            body: JSON.stringify({ fee_status: newStatus })
+          });
+          if (res.ok) {
+            showStudents();
+            loadStats();
+          }
+        } catch (e) {
+          alert('Failed to update student fee status.');
+        }
+      };
+
+      window.deleteStudent = async function(id) {
+        if (!confirm('Are you sure you want to delete this student record?')) return;
+        try {
+          const res = await fetch('/api/students/' + id, { method: 'DELETE', headers: authHeaders });
+          if (res.ok) {
+            showStudents();
+            loadStats();
+          }
+        } catch (e) {
+          alert('Failed to delete student.');
+        }
+      };
+
+      // Modals Logic
+      const studentModal = document.getElementById('studentModal');
+      const noticeModal = document.getElementById('noticeModal');
+
+      document.getElementById('btnAddStudent').onclick = () => {
+        document.getElementById('studentForm').reset();
+        studentModal.classList.remove('hidden');
+      };
+      document.getElementById('closeStudentModal').onclick = () => studentModal.classList.add('hidden');
+
+      document.getElementById('studentForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const body = {
+          roll_no: document.getElementById('mRoll').value,
+          name: document.getElementById('mName').value,
+          course: document.getElementById('mCourse').value,
+          attendance: document.getElementById('mAttendance').value,
+          fee_status: document.getElementById('mFeeStatus').value
+        };
+
+        try {
+          const res = await fetch('/api/students', {
+            method: 'POST',
+            headers: authHeaders,
+            body: JSON.stringify(body)
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            alert(data.error || 'Error saving student');
+            return;
+          }
+          studentModal.classList.add('hidden');
+          showStudents();
+          loadStats();
+        } catch (err) {
+          alert('Failed to create student');
+        }
+      };
+
+      document.getElementById('btnAddNotice').onclick = () => {
+        document.getElementById('noticeForm').reset();
+        noticeModal.classList.remove('hidden');
+      };
+      document.getElementById('closeNoticeModal').onclick = () => noticeModal.classList.add('hidden');
+
+      document.getElementById('noticeForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const title = document.getElementById('nTitle').value;
+        const author = document.getElementById('nAuthor').value;
+        try {
+          const res = await fetch('/api/notices', {
+            method: 'POST',
+            headers: authHeaders,
+            body: JSON.stringify({ title, author })
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            alert(data.error || 'Error posting notice');
+            return;
+          }
+          noticeModal.classList.add('hidden');
+          loadNotices();
+        } catch (err) {
+          alert('Failed to post notice');
+        }
+      };
+
+      document.getElementById("search").oninput = showStudents;
+      document.getElementById("dept").onchange = showStudents;
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      // Initial load
+      loadStats();
+      loadDepartments();
+      loadNotices();
+      showStudents();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+campusly.db
+campusly.db-journal
+campusly.db-wal
+campusly.db-shm
+.env
+.DS_Store
