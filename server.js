@@ -18,6 +18,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // API Routes
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    system: 'Campusly CMS Backend',
+    uptime: `${Math.floor(process.uptime())}s`,
+    timestamp: new Date().toISOString()
+  });
+});
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/notices', noticeRoutes);
