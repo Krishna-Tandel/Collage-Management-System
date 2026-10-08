@@ -14,6 +14,11 @@ router.post('/register', (req, res) => {
   }
 
   const cleanEmail = email.trim().toLowerCase();
+  const emailRegex = /^\S+@\S+\.\S+$/;
+  if (!emailRegex.test(cleanEmail)) {
+    return res.status(400).json({ error: 'Please provide a valid email address.' });
+  }
+
   const validRoles = ['Admin', 'Teacher', 'Student'];
   if (!validRoles.includes(role)) {
     return res.status(400).json({ error: 'Invalid role specified.' });
