@@ -8,6 +8,10 @@ const db = new Database(dbPath);
 // Enable foreign keys & WAL mode for performance
 db.pragma('journal_mode = WAL');
 
+/**
+ * Initializes the SQLite database tables and seeds initial demo records.
+ * Tables: users, students, notices, departments, timetable
+ */
 function initDb() {
   // 1. Users Table
   db.exec(`
