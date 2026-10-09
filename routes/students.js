@@ -3,7 +3,10 @@ const router = express.Router();
 const db = require('../db');
 const { verifyToken, requireRole } = require('../middleware/auth');
 
-// GET /api/students - Get all students (with search and department filters)
+/**
+ * GET /api/students
+ * Retrieves student records with optional search (name/roll_no) and department filters.
+ */
 router.get('/', verifyToken, (req, res) => {
   const { search, dept } = req.query;
 
