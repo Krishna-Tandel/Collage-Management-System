@@ -1,13 +1,19 @@
 {
   "name": "collage-management-system",
   "version": "1.0.0",
-  "description": "",
+  "description": "Full-stack College Management System built with Express, SQLite, and Vanilla JS",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "keywords": [],
+  "keywords": [
+    "college-management",
+    "express",
+    "sqlite",
+    "jwt",
+    "education"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
