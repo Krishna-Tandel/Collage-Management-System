@@ -3,7 +3,10 @@ const router = express.Router();
 const db = require('../db');
 const { verifyToken, requireRole } = require('../middleware/auth');
 
-// GET /api/notices
+/**
+ * GET /api/notices
+ * Retrieves all posted announcements and campus notices.
+ */
 router.get('/', verifyToken, (req, res) => {
   try {
     const notices = db.prepare('SELECT * FROM notices ORDER BY id DESC').all();
